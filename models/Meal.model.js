@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
-// CREATE SCHEMA
+ 
 const mealSchema = new Schema({
-    name: String,
-    calories: Number,
-    description: String,
-    img: String
-})
+
+  name: {type: String, required: true}, 
+  calories: {type: Number, required: true}, 
+  description: String, 
+  img: {type: String, default:""},
+  owner: {type: mongoose.Schema.Types.ObjectId, ref: "User"}
+});
 
 const Meal = mongoose.model("Meal", mealSchema);
 
