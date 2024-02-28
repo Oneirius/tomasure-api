@@ -1,8 +1,9 @@
-//import packages
+/// IMPORT PACKAGES
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
+
 require("dotenv").config();
 
 //declare server
@@ -30,8 +31,10 @@ server.use(express.static("public"));
 server.use(morgan("dev"));
 server.use(cors({ origin: ['http://localhost:5173'] }));
 
-//connecting server port
+// INITIALIZE SERVER
 const PORT = process.env.PORT;
+const MONGODB_URL = process.env.MONGODB_URL
+
 server.listen(PORT, () => {
   console.log("Server is listening on port:", PORT);
 });
@@ -105,10 +108,8 @@ server.put("/meals/:mealID", (req, res) => {
 
 })
 
+
 server.get("/*", (req, res) => {
   response.status(404)("This route doesn't exist");
+
 });
-/*
-server.get("/days:date", (request, response)=>{
-    response.send(console.log("return day meal data here"));
-}) */

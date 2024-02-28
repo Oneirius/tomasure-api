@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
  
-// CREATE SCHEMA
-// Schema - describes and enforces the structure of the documents
 const mealSchema = new Schema({
 
   name: {type: String, required: true}, 
@@ -12,9 +10,6 @@ const mealSchema = new Schema({
   owner: {type: mongoose.Schema.Types.ObjectId, ref: "User"}
 });
 
-
-
 const Meal = mongoose.model("Meal", mealSchema);
-
 
 module.exports = Meal;
