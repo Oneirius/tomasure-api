@@ -5,11 +5,11 @@ const Schema = mongoose.Schema;
 // Schema - describes and enforces the structure of the documents
 const mealSchema = new Schema({
 
-  name: String,
-  calories: Number,
+  name: {type: String, required: true}, 
+  calories: {type: Number, required: true}, 
   description: String, 
-  img: String,
-  
+  img: {type: String, default:""},
+  owner: {type: mongoose.Schema.Types.ObjectId, ref: "User"}
 });
 
 
