@@ -17,13 +17,6 @@ const mealBackupJson = require("./Meals.json");
 const Meal = require("./models/Meal.model");
 const User = require("./models/User.model");
 
-//connecting server
-const MONGODB_URL = process.env.MONGODB_URL;
-mongoose
-  .connect(MONGODB_URL)
-  .then(x => console.log(`Connected to Database: "${x.connections[0].name}"`))
-  .catch(err => console.error("Error connecting to MongoDB", err));
-
 
 //mware
 server.use(express.json());
@@ -33,17 +26,24 @@ server.use(cors({ origin: ['http://localhost:5173'] }));
 
 // INITIALIZE SERVER
 const PORT = process.env.PORT;
-const MONGODB_URL = process.env.MONGODB_URL
 
 server.listen(PORT, () => {
   console.log("Server is listening on port:", PORT);
 });
+
+//connecting server
+const MONGODB_URI = process.env.MONGODB_URI;
+mongoose
+  .connect(MONGODB_URI)
+  .then(x => console.log(`Connected to Database: "${x.connections[0].name}"`))
+  .catch(err => console.error("Error connecting to MongoDB", err));
 
 //ROUTES
 server.get("/user", (request, response) => {
   response.json({ "name": "Parick", "surname": "Lopez", "age": 42, "gender": "male", "height": 188, "weight": 99, "caloriesGoal": 2100 })
 })
 
+// Get all meals -NEW
 server.get("/meals", (req, res) => {
   Meal.find({})
     .then((Meals) => {
@@ -57,7 +57,7 @@ server.get("/meals", (req, res) => {
     });
 })
 
-
+// Get frequent meals (old)
 server.get("/frequent-meals", (request, response) => {
   response.send([
     {
@@ -70,12 +70,12 @@ server.get("/frequent-meals", (request, response) => {
   ]);
 })
 
+// Get everything - old
 server.get("/", (request, response) => {
   response.sendFile(__dirname + "/views/index.html");
 })
 
-
-
+// Restore meal database from backup
 server.post("/init-db", (req, res) => {
   Meal.insertMany(mealBackupJson)
     .then(mealsArray => res.status(200).json(mealsArray))
@@ -86,29 +86,83 @@ server.post("/init-db", (req, res) => {
     });
 })
 
+// Edit a meal
 server.put("/meals/:mealID", (req, res) => {
-  
-
   const { mealID } = req.params;
   const { name, calories, description, img, owner } = req.body;
 
-  Meal.findByIdAndUpdate(mealID, {
+  Meal.findById(mealID)
+  .then((foundMeal)=>{
+    if (foundMeal.owner === owner) {
+      Meal.findByIdAndUpdate(mealID, {
+        name,
+        calories,
+        description,
+        img,
+        owner
+      }, {new: true} )
+    }
+  })
+    .then((updatedMeal) => {
+      res.status(200).json(updatedMeal);
+    })
+    .catch((err) => {
+      res.status(500).json({err:"Failed to update meal"});
+    })
+})
+
+// Post a new Meal
+server.post("/meals/:ownerID", (req, res)=>{
+  console.log(req.body);
+
+  const {name, calories, description, img} = req.body;
+
+  Meal.create({
     name,
     calories,
     description,
     img,
-    owner
-  }, {new: true} )
-    .then((updatedMeal) => {
-      res.status(200).json(updatedMeal);
-    })
-    .catch((error) => {
-      res.status(500).json({err:"Failed to update meal"});
-    })
-
+    owner: req.params.ownerID
+  })
+  .then((createdMeal)=>{
+    console.log("Meal added ->", createdMeal);
+    return User.findByIdAndUpdate(req.params.ownerID, {$push: {meals: createdMeal._id}})
+    
+  })
+  .then((createdMeal)=>{
+    res.status(201).json(createdMeal);
+  })
+  .catch((error)=>{
+    res.status(500).json({error:"Failed to add meal to the database"});
+  })
 })
 
+// Post a new User
+server.post("/users", (req, res)=>{
+  // console.log(req.body);
+  
+  const {name, surname, age, gender, height, weight, caloriesGoal} = req.body;
+  
+  User.create({
+    name,
+    surname,
+    age,
+    gender,
+    height,
+    weight,
+    caloriesGoal
+  })
+  .then((createdUser)=>{
+    console.log("User created successfully ->", createdUser);
+    res.status(201).json(createdUser);
+  })
+  .catch((err)=>{
+    console.log(err);
+    res.status(500).json({err:"Failed to create user"});
+  })
+})
 
+// Not Found route
 server.get("/*", (req, res) => {
   response.status(404)("This route doesn't exist");
 
