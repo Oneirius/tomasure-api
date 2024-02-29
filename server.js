@@ -17,12 +17,13 @@ const mealBackupJson = require("./Meals.json");
 const Meal = require("./models/Meal.model");
 const User = require("./models/User.model");
 
-
 //mware
 server.use(express.json());
 server.use(express.static("public"));
 server.use(morgan("dev"));
 server.use(cors({ origin: ['http://localhost:5173'] }));
+const dayRoutes = require("./routes/day.routes")
+server.use("/", dayRoutes)
 
 // INITIALIZE SERVER
 const PORT = process.env.PORT;
@@ -101,7 +102,9 @@ server.put("/meals/:mealID", (req, res) => {
         img,
         owner
       }, {new: true} )
-    }
+    } else {
+        res.status(403).json({err:"No permission to modify meal!"});
+      }
   })
     .then((updatedMeal) => {
       res.status(200).json(updatedMeal);
@@ -129,8 +132,8 @@ server.post("/meals/:ownerID", (req, res)=>{
     return User.findByIdAndUpdate(req.params.ownerID, {$push: {meals: createdMeal._id}})
     
   })
-  .then((createdMeal)=>{
-    res.status(201).json(createdMeal);
+  .then((modifiedUser)=>{
+    res.status(201).json(modifiedUser);
   })
   .catch((error)=>{
     res.status(500).json({error:"Failed to add meal to the database"});
@@ -164,6 +167,5 @@ server.post("/users", (req, res)=>{
 
 // Not Found route
 server.get("/*", (req, res) => {
-  response.status(404)("This route doesn't exist");
-
+  res.status(404).json({message:"This route doesn't exist"});
 });

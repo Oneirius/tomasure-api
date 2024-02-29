@@ -12,11 +12,10 @@ const userSchema = new Schema({
   height: Number,
   weight: Number,
   caloriesGoal: {type: Number, required: true},
+  days:  [{type: mongoose.Schema.Types.ObjectId, ref: "Day"}] ,
   meals:  [{type: mongoose.Schema.Types.ObjectId, ref: "Meal"}] 
 });
 
-
 const User = mongoose.model("User", userSchema);
-
 
 module.exports = User;
