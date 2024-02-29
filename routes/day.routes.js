@@ -26,6 +26,20 @@ router.patch("/days/:dayId", (req, res, next) => {
             console.log("error updating day!", err);
             res.status(500).json({ message: "error updating day!" })
         })
+})
+
+//to do : move to user routes file when time is nigh
+//get all days of one user
+router.get("/users/:userId", (req, res, next) => {
+    const { userId, } = req.params
+
+    User.findById(userId)
+    .populate("days")
+        .then((userDays) => res.json(userDays))
+        .catch((err) => {
+            console.log("error retrieving user days!", err);
+            res.status(500).json({ message: "error retrieving user days!" })
+        })
 
 
 })
