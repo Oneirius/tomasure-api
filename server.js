@@ -95,7 +95,9 @@ server.post("/users", (req, res)=>{
   })
 })
 
+/*
 // GET - NOT FOUND PAGE
 server.get("/*", (req, res) => {
   res.status(404).json({message:"This route doesn't exist"});
 });
+*/
