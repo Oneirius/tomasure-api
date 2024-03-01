@@ -1,8 +1,10 @@
 /// IMPORT PACKAGES
 const express = require("express");
+const mongoose = require("mongoose");
+
 const morgan = require("morgan");
 const cors = require("cors");
-const mongoose = require("mongoose");
+const {isAuthenticated} = require('./middleware/jwt.middleware')
 
 require("dotenv").config();
 
@@ -25,11 +27,16 @@ server.use(cors({ origin: ['http://localhost:5173'] }));
 
 
 // IMPORT ROUTES
-const dayRoutes = require("./routes/day.routes");
-const mealRoutes = require("./routes/meal.routes");
+const dayRoutes = require('./routes/day.routes');
+const mealRoutes = require('./routes/meal.routes');
+const authRoutes = require('./routes/auth.routes')
 
-server.use("/", mealRoutes);
+server.use("/", mealRoutes); // Ask marcel: What's the difference between mealRoutes 
+                             // and mealRouter (from React|Toekn-Based Authentication lesson)
+                             // Answer: It is best practice to always call it router, since we are
+                             // exporting routers from the .routes files
 server.use("/", dayRoutes);
+server.use("/", authRoutes);
 
 // INITIALIZE SERVER
 const PORT = process.env.PORT;
@@ -46,8 +53,6 @@ mongoose
   .catch(err => console.error("Error connecting to MongoDB", err));
 
 //ROUTES
-
-
 // GET - API INFO PAGE
 server.get("/", (request, response) => {
   response.sendFile(__dirname + "/views/index.html");
