@@ -1,9 +1,11 @@
-const express = require('express');
 const router = require('express').Router();
 const Day = require("../models/Day.model");
 const Meal = require("../models/Meal.model");
 const User = require("../models/User.model");
 
+
+// ROUTES
+// POST - NEW DAY
 router.post("/days", (req, res, next) => {
     const { date, meals, owner } = req.body;
     Day.create({ date, meals, owner })
@@ -17,6 +19,7 @@ router.post("/days", (req, res, next) => {
         })
 })
 
+// PATCH - EDIT DAY
 router.patch("/days/:dayId", (req, res, next) => {
     const { meals, totalCalories, owner } = req.body;
     const { dayId, } = req.params
@@ -28,21 +31,17 @@ router.patch("/days/:dayId", (req, res, next) => {
         })
 })
 
-//to do : move to user routes file when time is nigh
-//get all days of one user
-router.get("/users/:userId", (req, res, next) => {
-    const { userId, } = req.params
+// GET - GET ALL DAYS FOR A SINGLE USER
+router.get("/userdays/:userId", (req, res) => {
+    const {userId} = req.params;
 
-    User.findById(userId)
-    .populate("days")
-        .then((userDays) => res.json(userDays))
-        .catch((err) => {
-            console.log("error retrieving user days!", err);
-            res.status(500).json({ message: "error retrieving user days!" })
-        })
+    Day.find({owner: userId})
+    .then ((userDays)=>res.json(userDays))
+    .catch((err)=> {
+        console.log("Error retrieving user days!");
+        res.status(500).json({message: "Error retrieving user days!"});
+    });
+});
 
 
-})
-
-module.exports = router
-
+module.exports = router;
