@@ -13,17 +13,23 @@ const server = express();
 const mealBackupJson = require("./Meals.json");
 //const userBackupJson = require("./Users.json");
 
-//import models
+// IMPORT MODELS
 const Meal = require("./models/Meal.model");
 const User = require("./models/User.model");
 
-//mware
+// MIDDLEWARE
 server.use(express.json());
 server.use(express.static("public"));
 server.use(morgan("dev"));
 server.use(cors({ origin: ['http://localhost:5173'] }));
-const dayRoutes = require("./routes/day.routes")
-server.use("/", dayRoutes)
+
+
+// IMPORT ROUTES
+const dayRoutes = require("./routes/day.routes");
+const mealRoutes = require("./routes/meal.routes");
+
+server.use("/", mealRoutes);
+server.use("/", dayRoutes);
 
 // INITIALIZE SERVER
 const PORT = process.env.PORT;
@@ -40,110 +46,34 @@ mongoose
   .catch(err => console.error("Error connecting to MongoDB", err));
 
 //ROUTES
-server.get("/user", (request, response) => {
-  response.json({ "name": "Parick", "surname": "Lopez", "age": 42, "gender": "male", "height": 188, "weight": 99, "caloriesGoal": 2100 })
-})
 
-// Get all meals -NEW
-server.get("/meals", (req, res) => {
-  Meal.find({})
-    .then((Meals) => {
-      console.log("All Meals", Meals);
 
-      res.status(200).json(Meals);
-    })
-    .catch((error) => {
-      console.error("Error while retrieving meals ->", error);
-      res.status(500).json({ error: "Failed to retrieve meals" });
-    });
-})
-
-// Get frequent meals (old)
-server.get("/frequent-meals", (request, response) => {
-  response.send([
-    {
-      "id": 3,
-      "name": "Orange Icecream",
-      "calories": 620,
-      "description": "Oranges are citrus fruits known for their tangy flavor and high vitamin C content. They are often eaten fresh or juiced.",
-      "img": "https://as1.ftcdn.net/v2/jpg/02/58/86/90/1000_F_258869082_TOHkGzpAyBS0b9nxkZZ5fhtEVaUzO8ch.jpg"
-    }
-  ]);
-})
-
-// Get everything - old
+// GET - API INFO PAGE
 server.get("/", (request, response) => {
   response.sendFile(__dirname + "/views/index.html");
 })
 
-// Restore meal database from backup
+// POST - RESTORE DATABASE FROM BACKUP
+// TO-DO: Add a delete everything call in here
 server.post("/init-db", (req, res) => {
   Meal.insertMany(mealBackupJson)
-    .then(mealsArray => res.status(200).json(mealsArray))
-
-    .catch((error) => {
-      console.error("404", error);
-      res.status(500).json({ error: "Failed to find the meals" });
-    });
-})
-
-// Edit a meal
-server.put("/meals/:mealID", (req, res) => {
-  const { mealID } = req.params;
-  const { name, calories, description, img, owner } = req.body;
-
-  Meal.findById(mealID)
-  .then((foundMeal)=>{
-    if (foundMeal.owner === owner) {
-      Meal.findByIdAndUpdate(mealID, {
-        name,
-        calories,
-        description,
-        img,
-        owner
-      }, {new: true} )
-    } else {
-        res.status(403).json({err:"No permission to modify meal!"});
-      }
-  })
-    .then((updatedMeal) => {
-      res.status(200).json(updatedMeal);
-    })
-    .catch((err) => {
-      res.status(500).json({err:"Failed to update meal"});
-    })
-})
-
-// Post a new Meal
-server.post("/meals/:ownerID", (req, res)=>{
-  console.log(req.body);
-
-  const {name, calories, description, img} = req.body;
-
-  Meal.create({
-    name,
-    calories,
-    description,
-    img,
-    owner: req.params.ownerID
-  })
-  .then((createdMeal)=>{
-    console.log("Meal added ->", createdMeal);
-    return User.findByIdAndUpdate(req.params.ownerID, {$push: {meals: createdMeal._id}})
-    
-  })
-  .then((modifiedUser)=>{
-    res.status(201).json(modifiedUser);
-  })
-  .catch((error)=>{
-    res.status(500).json({error:"Failed to add meal to the database"});
-  })
-})
-
-// Post a new User
-server.post("/users", (req, res)=>{
-  // console.log(req.body);
+  .then(mealsArray => res.status(200).json(mealsArray))
   
+  .catch((error) => {
+    console.error("404", error);
+    res.status(500).json({ error: "Failed to find the meals" });
+  });
+})
+
+
+// OLD - GET USER // TO-DO: Checkout for deletion
+server.get("/user", (request, response) => {
+  response.json({ "name": "Parick", "surname": "Lopez", "age": 42, "gender": "male", "height": 188, "weight": 99, "caloriesGoal": 2100 })
+})
+
+// POST - CREATE A NEW USER
+// TO-DO: REFACTOR
+server.post("/users", (req, res)=>{
   const {name, surname, age, gender, height, weight, caloriesGoal} = req.body;
   
   User.create({
@@ -165,7 +95,7 @@ server.post("/users", (req, res)=>{
   })
 })
 
-// Not Found route
+// GET - NOT FOUND PAGE
 server.get("/*", (req, res) => {
   res.status(404).json({message:"This route doesn't exist"});
 });
